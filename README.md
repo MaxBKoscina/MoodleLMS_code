@@ -27,10 +27,7 @@ El modelo final busca un equilibrio óptimo entre una alta capacidad de detecci�
 │   └── 04_Optimizacion_Evaluacion_Modelos.ipynb
 ├── models/
 │   └── modelo_lstm_f1_optuna_final.keras
-├── plots/
-│   └── lstm_f1_learning_curves.png
 ├── requirements.txt
-├── .gitignore
 └── README.md
 ```
 
