@@ -38,53 +38,46 @@ El modelo final busca un equilibrio óptimo entre una alta capacidad de detecci�
 
 ## 🧪 3. Adquisición y Preprocesamiento de Datos
 
-### 3.1 Proceso de Preprocesamiento
+### 3.1. Proceso de Preprocesamiento
+
 El proceso general para cada período académico (2023-1, 2023-2, 2024-1) es el mismo, adaptándose a las particularidades de cada semestre:
 
-3.1. Proceso de Preprocesamiento
-El proceso general para cada período académico (2023-1, 2023-2, 2024-1) es el mismo, adaptándose a las particularidades de cada semestre:
+- **Carga de Datos Crudos:**
+  - Importación de logs de actividad de Moodle.
+  - Importación de registros de notas.
 
-Carga de Datos Crudos:
-Importación de logs de actividad de Moodle y registros de notas.
+- **Limpieza Inicial:**
+  - Eliminación de duplicados y manejo de valores nulos.
+  - Estandarización de nombres de usuario (eliminación de espacios, uso de minúsculas).
+  - Conversión de tipos de datos a formatos adecuados (fechas, texto, categóricos).
 
-Limpieza Inicial:
+- **Filtrado de Usuarios No Estudiantiles:**
+  - Remoción de logs generados por profesores o cuentas administrativas (mediante listas de nombres y patrones).
+  - Eliminación de eventos irrelevantes para el comportamiento académico.
 
-Eliminación de duplicados y manejo de valores nulos.
+- **Cálculo de `semana_semestre`:**
+  - Se determina la semana relativa desde el inicio del semestre para cada registro de log, según el calendario académico real.
 
-Estandarización de nombres de usuario (eliminación de espacios y conversión a minúsculas).
+- **Agregación Semanal de Logs:**
+  - Consolidación de logs diarios a nivel semanal por estudiante y semestre.
 
-Conversión de tipos de datos a formatos adecuados (fechas, texto, categóricos).
+- **Cálculo de Características Acumulativas y Derivadas:**
+  - Generación de variables temporales que resumen la evolución de actividad y rendimiento del estudiante.
 
-Filtrado de Usuarios No Estudiantiles:
+- **Manejo Adaptativo entre Semestres/Períodos:**
+  - Consideración de feriados, paros académicos u otros factores que alteran la distribución del semestre.
+  - Ajuste dinámico de los cortes temporales y del cálculo de semanas.
 
-Remoción de logs generados por profesores o cuentas administrativas (mediante listas de nombres y patrones).
+- **Generación del `df_consolidado`:**
+  - DataFrame con una fila por estudiante–semestre–semana, incluyendo todas las variables calculadas.
 
-Eliminación de eventos de logs irrelevantes para el análisis del comportamiento estudiantil.
+- **Escalado de Características:**
+  - Aplicación de `StandardScaler` para normalizar variables numéricas.
 
-Cálculo de semana_semestre:
-Se calcula la semana relativa dentro de cada semestre para cada registro de log, basándose en la fecha de inicio del período académico correspondiente.
+- **Creación de Datasets para Modelos:**
+  - Formato 2D (`muestras x características`) para modelos tradicionales (MLP, RF, etc.).
+  - Formato 3D (`muestras x semanas x características`) para modelos secuenciales (LSTM, LSTM-CNN), con padding incluido.
 
-Agregación Semanal de Logs:
-Los logs diarios se consolidan a un nivel semanal por estudiante y semestre, resumiendo la actividad semanal del estudiante.
-
-Cálculo de Características Acumulativas y Derivadas:
-Se generan un conjunto amplio de variables que evolucionan semana a semana, reflejando tanto la actividad en la plataforma como el progreso académico.
-
-Manejo Adaptativo entre Semestres/Períodos:
-El preprocesamiento fue diseñado para ser generalizable a distintos semestres, considerando que la duración de las semanas clave (certámenes, certificaciones) puede variar por feriados, paros u otros factores externos. Los cálculos de semana_semestre y los cortes de datos se ajustan dinámicamente a la duración real del período.
-
-Generación del df_consolidado:
-Se produce un DataFrame consolidado que contiene una observación por estudiante–semestre–semana con todas las características temporales calculadas. Este dataset sirve como base común para la construcción de los datasets de entrenamiento.
-
-Escalado de Características:
-Las variables numéricas finales del df_consolidado se escalan usando técnicas como StandardScaler para mejorar el desempeño de los algoritmos de Machine Learning.
-
-Creación de Datasets para Modelos:
-El df_consolidado se transforma en:
-
-Formato 2D (muestras x características) para modelos tabulares (MLP, RF, CatBoost, etc.).
-
-Formato 3D (muestras x pasos_de_tiempo x características) para modelos secuenciales (LSTM, LSTM-CNN), aplicando padding para estandarizar la longitud de las secuencias.
 
 ### 3.2 Variables Derivadas Creadas
 Durante el preprocesamiento, se crearon las siguientes variables clave que alimentan los modelos predictivos, reflejando tanto la actividad del estudiante en Moodle como su progreso académico:
@@ -149,7 +142,9 @@ Se exploraron y optimizaron nueve algoritmos de Machine Learning y Deep Learning
 
 El modelo LSTM entrenado y optimizado se guarda en la carpeta models/.
 
-Cómo cargarlo:
+### 📦 Cómo cargar el modelo entrenado
+
+```python
 from tensorflow.keras.models import load_model
 import os
 
@@ -165,19 +160,17 @@ modelo_cargado = load_model(model_path)
 
 print(f"Modelo cargado exitosamente desde: {model_path}")
 
-Cómo usarlo para predecir:
-
 # Asumiendo que 'X_nueva_secuencia_escalada' es un nuevo dato preprocesado
 # en el formato 3D (num_muestras, max_semanas, num_features).
 # Es crucial que los nuevos datos se preprocesen y escalen EXACTAMENTE de la misma forma
 # que los datos de entrenamiento (ver notebooks de preprocesamiento).
 
 # Ejemplo de predicción para una nueva secuencia
-# prediction_proba = modelo_cargado.predict(X_nueva_secuencia_escalada)
-# prediction_class = (prediction_proba >= 0.66).astype(int) # Usando el umbral sugerido
+prediction_proba = modelo_cargado.predict(X_nueva_secuencia_escalada)
+prediction_class = (prediction_proba >= 0.66).astype(int)  # Usando el umbral sugerido
 
-# print(f"Probabilidad de reprobar: {prediction_proba[0][0]:.4f}")
-# print(f"Clasificación (0: Reprueba, 1: Aprueba): {prediction_class[0][0]}")
+print(f"Probabilidad de reprobar: {prediction_proba[0][0]:.4f}")
+print(f"Clasificación (0: Reprueba, 1: Aprueba): {prediction_class[0][0]}")
 
 ---
 
