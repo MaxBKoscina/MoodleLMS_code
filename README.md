@@ -172,8 +172,10 @@ prediction_class = (prediction_proba >= 0.66).astype(int)  # Usando el umbral su
 print(f"Probabilidad de reprobar: {prediction_proba[0][0]:.4f}")
 print(f"Clasificación (0: Reprueba, 1: Aprueba): {prediction_class[0][0]}")
 
+
 ---
 
+```
 ## 📚 7. Documentación y Preparación para Implantación
 
 ### Requerimientos y Preparación del Ambiente
