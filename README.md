@@ -1,4 +1,5 @@
-MoodleLMS_Prediction: Predicción Temprana de Abandono Estudiantil
+***MoodleLMS_Prediction: Predicción Temprana de Abandono Estudiantil***
+
 Este repositorio contiene el desarrollo de un sistema predictivo basado en Machine Learning y Deep Learning, utilizando datos de logs de Moodle LMS para identificar tempranamente a estudiantes en riesgo de reprobar.
 
 🎯 1. Propósito del Proyecto
